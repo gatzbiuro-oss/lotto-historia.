@@ -1,0 +1,30 @@
+name: Aktualizuj Lotto
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 23 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  aktualizacja:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobierz repozytorium
+        uses: actions/checkout@v4
+      - name: Pobierz archiwum
+        run: |
+          curl --fail --location --retry 3 --output lotto.txt https://www.mbnet.com.pl/dl.txt
+          test -s lotto.txt
+          test "$(wc -l < lotto.txt)" -gt 7000
+      - name: Zapisz nowe wyniki
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lotto.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Aktualizacja wyników Lotto"
+            git push
+          fi
